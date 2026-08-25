@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const userController = require("../controllers/userController");
+const userController = require("../controllers/userControllers");
 const { verifyToken, authorizeRoles } = require("../middleware/authMiddleware");
 
 // Semua rute di bawah ini wajib membawa Token JWT
