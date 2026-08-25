@@ -1,17 +1,25 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
+const { verifyToken, authorizeRoles } = require("../middleware/authMiddleware");
 
-// READ (Semua user / Super Admin)
-router.get("/", userController.getAllUsers);
+// Semua rute di bawah ini wajib membawa Token JWT
+router.use(verifyToken);
 
-// CREATE (Semua user / Super Admin)
-router.post("/", userController.createUser);
+// READ & CREATE: Bisa diakses oleh User biasa dan Super Admin
+router.get(
+  "/",
+  authorizeRoles("user", "super_admin"),
+  userController.getAllUsers,
+);
+router.post(
+  "/",
+  authorizeRoles("user", "super_admin"),
+  userController.createUser,
+);
 
-// UPDATE (Khusus Super Admin)
-router.put("/:id", userController.updateUser);
-
-// DELETE (Khusus Super Admin)
-router.delete("/:id", userController.deleteUser);
+// UPDATE & DELETE: Hanya bisa diakses oleh Super Admin
+router.put("/:id", authorizeRoles("super_admin"), userController.updateUser);
+router.delete("/:id", authorizeRoles("super_admin"), userController.deleteUser);
 
 module.exports = router;
