@@ -52,6 +52,22 @@ class UserModel {
     const [result] = await db.query(query, [id]);
     return result.affectedRows > 0; // Mengembalikan true jika berhasil menghapus
   }
+  // ----------------------------------------------------
+  // FITUR LOGOUT & BLACKLIST TOKEN
+  // ----------------------------------------------------
+
+  // Menyimpan token ke daftar blacklist saat logout
+  static async addTokenToBlacklist(token) {
+    const query = "INSERT INTO token_blacklist (token) VALUES (?)";
+    await db.query(query, [token]);
+  }
+
+  // Memeriksa apakah token sudah ada di blacklist
+  static async isTokenBlacklisted(token) {
+    const query = "SELECT * FROM token_blacklist WHERE token = ?";
+    const [rows] = await db.query(query, [token]);
+    return rows.length > 0;
+  }
 }
 
 module.exports = UserModel;
