@@ -3,23 +3,30 @@ const router = express.Router();
 const userController = require("../controllers/userControllers");
 const { verifyToken, authorizeRoles } = require("../middleware/authMiddleware");
 
-// Semua rute di bawah ini wajib membawa Token JWT
+// Verifikasi Token JWT wajib untuk semua rute
 router.use(verifyToken);
 
-// READ & CREATE: Bisa diakses oleh User biasa dan Super Admin
+// GET ALL: Khusus Super Admin
+router.get("/", authorizeRoles("super_admin"), userController.getAllUsers);
+
+// GET BY ID: User biasa & Super Admin (User biasa dibatasi hanya bisa liat ID sendiri)
 router.get(
-  "/",
+  "/:id",
   authorizeRoles("user", "super_admin"),
-  userController.getAllUsers,
+  userController.getUserById,
 );
+
+// CREATE: User biasa & Super Admin
 router.post(
   "/",
   authorizeRoles("user", "super_admin"),
   userController.createUser,
 );
 
-// UPDATE & DELETE: Hanya bisa diakses oleh Super Admin
+// UPDATE: Khusus Super Admin
 router.put("/:id", authorizeRoles("super_admin"), userController.updateUser);
+
+// DELETE: Khusus Super Admin
 router.delete("/:id", authorizeRoles("super_admin"), userController.deleteUser);
 
 module.exports = router;

@@ -17,7 +17,38 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// 2. CREATE: Menambah user baru (Dapat diakses oleh User Biasa & Super Admin)
+// 2. READ BY ID: Mengambil detail user berdasarkan ID
+// User biasa hanya bisa melihat ID-nya sendiri, Super Admin bisa melihat ID siapa saja
+exports.getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Proteksi Keamanan: Jika bukan Super Admin dan mencoba melihat ID orang lain
+    if (req.user.role !== "super_admin" && parseInt(id) !== req.user.id) {
+      return res.status(403).json({
+        message:
+          "Akses ditolak! Anda hanya dapat melihat data profil Anda sendiri.",
+      });
+    }
+
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User tidak ditemukan!" });
+    }
+
+    return res.status(200).json({
+      message: "Berhasil mengambil data user",
+      data: user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Gagal mengambil data user",
+      error: error.message,
+    });
+  }
+};
+
+// 3. CREATE: Menambah user baru (Dapat diakses oleh User Biasa & Super Admin)
 exports.createUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -66,7 +97,7 @@ exports.createUser = async (req, res) => {
   }
 };
 
-// 3. UPDATE: Memperbarui data user (Khusus Super Admin)
+// 4. UPDATE: Memperbarui data user (Khusus Super Admin)
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -102,7 +133,7 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// 4. DELETE: Menghapus user (Khusus Super Admin)
+// 5. DELETE: Menghapus user (Khusus Super Admin)
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
