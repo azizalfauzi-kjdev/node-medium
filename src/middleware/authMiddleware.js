@@ -1,10 +1,9 @@
 const jwt = require("jsonwebtoken");
 
 // 1. VERIFIKASI TOKEN JWT
-exports.verifyToken = (req, res, next) => {
-  // Mengambil token dari header Authorization
+exports.verifyToken = async (req, res, next) => {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // Format: "Bearer <token>"
+  const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
     return res
@@ -13,9 +12,18 @@ exports.verifyToken = (req, res, next) => {
   }
 
   try {
-    // Verifikasi token
+    // Cek apakah token sudah di-blacklist (logout)
+    const isBlacklisted = await UserModel.isTokenBlacklisted(token);
+    if (isBlacklisted) {
+      return res.status(401).json({
+        message:
+          "Token sudah tidak berlaku (Anda telah logout). Silakan login kembali.",
+      });
+    }
+
+    // Verifikasi JWT
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Menyimpan data user (id & role) ke object request
+    req.user = decoded;
     next();
   } catch (error) {
     return res
