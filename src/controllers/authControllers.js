@@ -90,3 +90,27 @@ exports.login = async (req, res) => {
       .json({ message: "Terjadi kesalahan server", error: error.message });
   }
 };
+
+// 3. LOGOUT USER
+exports.logout = async (req, res) => {
+  try {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(400).json({ message: "Token tidak ditemukan!" });
+    }
+
+    // Masukkan token ke daftar blacklist di database
+    await UserModel.addTokenToBlacklist(token);
+
+    return res.status(200).json({
+      message: "Logout berhasil! Token telah dinonaktifkan.",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Terjadi kesalahan saat logout",
+      error: error.message,
+    });
+  }
+};
