@@ -1,8 +1,10 @@
 const jwt = require("jsonwebtoken");
+const UserModel = require("../models/userModel");
 
-// 1. VERIFIKASI TOKEN JWT
 exports.verifyToken = async (req, res, next) => {
   const authHeader = req.headers["authorization"];
+
+  // Mengambil token setelah kata 'Bearer '
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
@@ -12,7 +14,7 @@ exports.verifyToken = async (req, res, next) => {
   }
 
   try {
-    // Cek apakah token sudah di-blacklist (logout)
+    // 1. Cek apakah token sudah di-blacklist (logout)
     const isBlacklisted = await UserModel.isTokenBlacklisted(token);
     if (isBlacklisted) {
       return res.status(401).json({
@@ -21,14 +23,23 @@ exports.verifyToken = async (req, res, next) => {
       });
     }
 
-    // Verifikasi JWT
+    // 2. Verifikasi JWT
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {
-    return res
-      .status(403)
-      .json({ message: "Token tidak valid atau sudah kadaluwarsa!" });
+    // Memberikan respon error yang spesifik berdasarkan tipe kesalahan JWT
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        message:
+          "Token sudah kadaluwarsa! Silakan login ulang untuk mendapatkan token baru.",
+      });
+    }
+
+    return res.status(403).json({
+      message: "Token tidak valid!",
+      errorDetail: error.message,
+    });
   }
 };
 
